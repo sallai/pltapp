@@ -1,0 +1,28 @@
+build:
+  name: "ww"
+  version: "1.0.0"
+  
+pyinstaller:
+  options:
+    - "--onefile"
+    - "--windowed"
+    - "--noconsole"
+  exclude_modules:
+    - "tkinter"
+    - "matplotlib"
+  hidden_imports:
+    - "nicegui"
+    - "pywebview"
+  
+packaging:
+  platforms:
+    - "windows"
+    - "macos" 
+    - "linux"
+  output_dir: "dist"
+  
+metadata:
+  author: "Developer"
+  description: "NiceGUI application with pywebview"
+  copyright: "2025"
+  icon: "assets/icons/app.ico"

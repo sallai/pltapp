@@ -1,0 +1,7 @@
+# PySide6-specific requirements (alternative to PyQt6)
+# Note: PyQt6 and PySide6 cannot coexist in the same environment
+
+-r base_qt_common.txt
+
+# PySide6 (default Qt toolkit)
+PySide6==6.8.1

@@ -1,0 +1,2 @@
+# Default requirements use PySide6
+-r pyside6.txt

@@ -1,0 +1,9 @@
+# PyQt6-specific requirements (alternative to PySide6)
+# Note: PyQt6 and PySide6 cannot coexist in the same environment
+# Use this file instead of base.txt when using PyQt6
+
+-r base_qt_common.txt
+
+# PyQt6 and WebEngine
+PyQt6>=6.5.0
+PyQt6-WebEngine>=6.5.0
