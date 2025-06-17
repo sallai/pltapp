@@ -304,6 +304,26 @@ def main(toolkit: Optional[str] = None):
 
 
 if __name__ == "__main__":
+    # Handle help command
+    if len(sys.argv) > 1 and sys.argv[1] in ['--help', '-h', 'help']:
+        print("WW - NiceGUI Desktop Application with Platform Abstraction")
+        print()
+        print("Usage: ww [TOOLKIT]")
+        print()
+        print("TOOLKIT options:")
+        print("  pyside6      - Qt WebEngine (PySide6) - recommended")
+        print("  pyqt6        - Qt WebEngine (PyQt6) - alternative")
+        print("  macos_webkit - Native macOS WebKit - minimal dependencies")
+        print("  gtk          - GTK WebKit (Linux)")
+        print()
+        print("If no toolkit is specified, auto-detection will be used.")
+        print()
+        print("Platform auto-detection priorities:")
+        print("  macOS:   macos_webkit → pyside6 → pyqt6")
+        print("  Windows: pyqt6 → pyside6")
+        print("  Linux:   gtk → pyside6 → pyqt6")
+        sys.exit(0)
+    
     # Allow toolkit selection via command line
     toolkit = None
     if len(sys.argv) > 1:
@@ -311,6 +331,7 @@ if __name__ == "__main__":
         if toolkit not in ['pyside6', 'pyqt6', 'gtk', 'macos_webkit']:
             print(f"Unknown toolkit: {toolkit}")
             print("Available options: pyside6, pyqt6, gtk, macos_webkit")
+            print("Use --help for more information.")
             sys.exit(1)
     
     sys.exit(main(toolkit))
