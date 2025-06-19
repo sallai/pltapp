@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-This project is a technology demonstration showing a NiceGUI UI application with a couple of UI controls in a pywebview, packaged into a native executable using PyInstaller. The project is kept as simple as possible, focusing on easy comprehensibility by humans, with proper inline documentation and markers indicating where additional functionality would be added should the developer want to turn this into a full-blown project.
+This project is a technology demonstration showing a NiceGUI UI application with a couple of UI controls in a native window, packaged into a native executable using PyInstaller. The project is kept as simple as possible, focusing on easy comprehensibility by humans, with proper inline documentation and markers indicating where additional functionality would be added should the developer want to turn this into a full-blown project.
 
 ## Current Project Status
 
@@ -13,7 +13,7 @@ This project is a technology demonstration showing a NiceGUI UI application with
 - ✅ Project structure established with automation scripts
 - ✅ Dependencies defined and virtual environment ready
 - ❌ Main application implementation pending (main.py commented out)
-- ❌ NiceGUI + pywebview integration needed
+- ❌ NiceGUI native mode integration needed
 - ❌ PyInstaller packaging validation required
 
 ## 3-Stage Development Plan
@@ -46,11 +46,11 @@ This project is a technology demonstration showing a NiceGUI UI application with
 - Basic UI functionality verified
 
 ### Stage 2: Native Integration & Packaging
-**Goal**: Integrate pywebview and create distributable executable
+**Goal**: Integrate native window mode and create distributable executable
 
 #### Tasks:
 1. **NiceGUI Native Mode Setup**
-   - Research NiceGUI native vs pywebview approach
+   - Research NiceGUI native mode implementation
    - Implement chosen native window solution
    - Test native window functionality
    - Ensure proper window management
@@ -103,7 +103,7 @@ This project is a technology demonstration showing a NiceGUI UI application with
 ## Implementation Notes
 
 ### Key Decision Points:
-- **NiceGUI Native Mode**: Use `ui.run(native=True)` vs separate pywebview integration
+- **NiceGUI Native Mode**: Use `ui.run(native=True)` for desktop windows
 - **Asset Bundling**: Ensure NiceGUI static files included in PyInstaller build
 - **Window Management**: Proper shutdown and window lifecycle handling
 
@@ -116,7 +116,7 @@ This project is a technology demonstration showing a NiceGUI UI application with
 ## Tech Stack
 
 - **NiceGUI**: Web-based Python UI framework
-- **pywebview**: Wrapper for displaying web content in native windows
+- **NiceGUI Native Mode**: Built-in desktop window functionality
 - **PyInstaller**: Packages Python applications into standalone executables
 
 ## Quick Start Commands
@@ -143,7 +143,7 @@ python scripts/build_executable.py
 
 The application follows a simple architecture pattern:
 - NiceGUI handles the web UI components and server
-- pywebview creates a native window container
+- NiceGUI native mode creates a desktop window container
 - PyInstaller bundles everything into a distributable executable
 
 ## Development Guidelines

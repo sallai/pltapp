@@ -98,7 +98,6 @@ def verify_installation() -> bool:
     # Test import of key packages
     test_imports = [
         "nicegui",
-        "pywebview",
         "fastapi",
         "uvicorn",
         "ruff",

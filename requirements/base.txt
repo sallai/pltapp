@@ -1,5 +1,4 @@
 # Core dependencies for NiceGUI desktop application
 nicegui>=2.0.0
-pywebview>=5.0.0
 fastapi
 uvicorn

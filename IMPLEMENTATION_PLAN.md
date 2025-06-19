@@ -6,7 +6,7 @@ This document outlines the implementation plan for the NiceGUI + PyInstaller tec
 
 **Goal**: Create a technology demonstration showing a NiceGUI UI application packaged into a native executable using PyInstaller, focusing on simplicity and comprehensibility.
 
-**Tech Stack**: NiceGUI, pywebview, PyInstaller, Python 3.11+
+**Tech Stack**: NiceGUI, PyInstaller, Python 3.11+
 
 ## 3-Stage Development Plan
 
@@ -45,12 +45,10 @@ This document outlines the implementation plan for the NiceGUI + PyInstaller tec
 - ✅ Clean, well-documented codebase
 
 ### Stage 2: Native Integration & Packaging
-**Goal**: Integrate pywebview and create distributable executable
+**Goal**: Create distributable executable
 
 #### Key Tasks:
 1. **NiceGUI Native Mode Setup**
-   - Research NiceGUI native vs pywebview approach
-   - Implement chosen native window solution
    - Test native window functionality  
    - Ensure proper window management
 
@@ -108,7 +106,7 @@ This document outlines the implementation plan for the NiceGUI + PyInstaller tec
 - Build process must be repeatable and automated
 
 ### Key Decision Points:
-- **NiceGUI Native Mode**: Use `ui.run(native=True)` vs separate pywebview integration
+- **NiceGUI Native Mode**: Use `ui.run(native=True)` 
 - **Asset Bundling**: Ensure NiceGUI static files included in PyInstaller build
 - **Window Management**: Proper shutdown and window lifecycle handling
 

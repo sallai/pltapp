@@ -3,7 +3,7 @@
 ## Current Project State (June 18, 2025)
 
 ### Project Overview
-Technology demonstration of NiceGUI UI application with pywebview, packaged into native executable using PyInstaller. Focus on simplicity and comprehensibility.
+Technology demonstration of NiceGUI UI application packaged into native executable using PyInstaller. Focus on simplicity and comprehensibility.
 
 ### Current Status: ALL STAGES COMPLETE - PRODUCTION READY
 - ✅ Project structure established with proper modular design
@@ -19,7 +19,7 @@ Technology demonstration of NiceGUI UI application with pywebview, packaged into
 - ✅ Production-ready executable created and tested
 
 ### Architecture Decisions Made
-- **Dependencies**: NiceGUI 2.20.0+, pywebview 5.4+, FastAPI, uvicorn
+- **Dependencies**: NiceGUI 2.20.0+, FastAPI, uvicorn
 - **Build Tool**: PyInstaller with native window support
 - **Code Quality**: Ruff linter, Black formatter, MyPy type checker
 - **Project Structure**: Keeping simple flat structure for demo
@@ -55,7 +55,7 @@ ww/
 ```
 
 ### Dependencies Installed
-- **Runtime**: NiceGUI 2.20.0+, pywebview 5.4+, FastAPI, uvicorn
+- **Runtime**: NiceGUI 2.20.0+, FastAPI, uvicorn
 - **Development**: ruff, black, mypy, isort, bandit, pytest, pytest-cov, pre-commit
 - **Build**: PyInstaller 6.14.1 (optimized for macOS .app bundles)
 
@@ -70,7 +70,7 @@ ww/
 
 #### Stage 2: Native Integration & Packaging ✅ COMPLETE  
 - ✅ PyInstaller configuration optimized for macOS compatibility
-- ✅ NiceGUI native mode successfully integrated with pywebview
+- ✅ NiceGUI native mode successfully integrated for desktop windows
 - ✅ Build script creates both standalone executable and .app bundle
 - ✅ Onedir mode configured for better macOS security compliance
 - ✅ All NiceGUI static assets properly bundled
@@ -83,7 +83,7 @@ ww/
 - ✅ Build process optimized and repeatable
 
 ### Production Ready Features
-- **Native Window**: Uses pywebview for native macOS window integration
+- **Native Window**: Native macOS window integration
 - **Standalone Executable**: No external dependencies required
 - **Professional UI**: Clean NiceGUI interface with proper styling
 - **Graceful Shutdown**: Proper application lifecycle management
