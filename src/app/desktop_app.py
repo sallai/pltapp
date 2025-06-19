@@ -11,6 +11,7 @@ import datetime
 import socket
 from typing import Any
 
+import httpx
 from nicegui import app, ui
 
 
@@ -22,6 +23,7 @@ class DesktopApp:
         self.dark_mode = False  # Configuration state
         self.clock_label: ui.label | None = None
         self.clock_task: asyncio.Task | None = None
+        self.public_ip_label: ui.label | None = None
         self.setup_pages()
         self.setup_shutdown_handler()
 
@@ -82,8 +84,44 @@ class DesktopApp:
         while True:
             if self.clock_label:
                 current_time = datetime.datetime.now().strftime("%H:%M:%S")
-                self.clock_label.text = f"Current Time: {current_time}"
+                self.clock_label.text = current_time
             await asyncio.sleep(1)
+
+    async def get_public_ip(self) -> None:
+        """Retrieve public IP address from ipify.org API."""
+        if not self.public_ip_label:
+            return
+
+        self.log_action("Network Request", "Fetching public IP from api.ipify.org")
+
+        # Show loading state
+        self.public_ip_label.text = "Fetching IP..."
+        self.public_ip_label.style("color: #ff9800")
+
+        try:
+            async with httpx.AsyncClient(timeout=10.0) as client:
+                response = await client.get("https://api.ipify.org?format=text")
+                response.raise_for_status()
+                public_ip = response.text.strip()
+
+                self.public_ip_label.text = f"Public IP: {public_ip}"
+                self.public_ip_label.style("color: #4caf50")
+                self.log_action("Network Success", f"Retrieved public IP: {public_ip}")
+
+        except httpx.TimeoutException:
+            self.public_ip_label.text = "Request timed out"
+            self.public_ip_label.style("color: #d32f2f")
+            self.log_action("Network Error", "Request timed out")
+
+        except httpx.HTTPStatusError as e:
+            self.public_ip_label.text = f"HTTP Error: {e.response.status_code}"
+            self.public_ip_label.style("color: #d32f2f")
+            self.log_action("Network Error", f"HTTP {e.response.status_code}")
+
+        except Exception as e:
+            self.public_ip_label.text = f"Error: {str(e)[:50]}..."
+            self.public_ip_label.style("color: #d32f2f")
+            self.log_action("Network Error", f"Exception: {type(e).__name__}")
 
     def log_action(self, action: str, details: str = "") -> None:
         """Log UI actions to console with timestamp."""
@@ -154,125 +192,207 @@ class DesktopApp:
         @ui.page("/")
         def main_page() -> None:
             """Main application page with enhanced UI components."""
-            # Menu bar
-            with ui.header().style("background-color: #1976d2; padding: 10px"):
-                ui.label("NiceGUI Desktop Demo").style(
-                    "font-size: 20px; font-weight: bold; color: white"
-                )
-                ui.space()
-                ui.button("⚙️ Config", on_click=self.show_config_dialog).style(
-                    "background-color: transparent; color: white; border: 1px solid white"
-                )
+            # Header with hamburger menu
+            with ui.header().style(
+                "background-color: #1976d2; padding: 10px; height: 60px"
+            ):
+                with ui.row().style("width: 100%; align-items: center"):
+                    # Hamburger menu
+                    with ui.button(icon="menu").style(
+                        "background-color: transparent; color: white"
+                    ):
+                        with ui.menu():
+                            with ui.menu_item(
+                                "⚙️ Configuration", on_click=self.show_config_dialog
+                            ):
+                                pass
+                            with ui.menu_item("ℹ️ About"):
+                                with ui.menu():
+                                    ui.menu_item("NiceGUI Desktop Demo v1.0")
+                                    ui.menu_item("Built with NiceGUI + PyInstaller")
 
-            # Main content area
-            with ui.column().style("padding: 20px; max-width: 600px; margin: 0 auto"):
-                # Clock display (periodic async updates)
-                self.clock_label = ui.label("Loading time...").style(
-                    "font-size: 24px; font-weight: bold; color: #1976d2; margin-bottom: 20px; text-align: center"
-                )
+                    ui.space()
 
-                # Start the clock update task
-                if not self.clock_task or self.clock_task.done():
-                    self.clock_task = asyncio.create_task(self.update_clock())
-
-                ui.separator().style("margin: 20px 0")
-
-                # Text input section
-                ui.label("Text Processing Demo:").style(
-                    "font-size: 18px; margin-bottom: 10px"
-                )
-
-                text_input = ui.input("Enter some text here...").style(
-                    "margin-bottom: 10px; width: 100%"
-                )
-                result_label = ui.label("Result will appear here").style(
-                    "font-weight: bold; color: #1976d2; margin-bottom: 10px; min-height: 24px"
-                )
-
-                def on_text_change() -> None:
-                    """Process text input and update result display."""
-                    input_text = text_input.value or ""
-                    if input_text:
-                        result_text = f"✓ You typed: '{input_text}' (Length: {len(input_text)} chars)"
-                        result_label.style("color: #4caf50")
-                    else:
-                        result_text = "⚠️ No text entered"
-                        result_label.style("color: #ff9800")
-
-                    result_label.text = result_text
-                    self.log_action(
-                        "Text Processing",
-                        f"Input: '{input_text}', Length: {len(input_text)}",
+                    # App title
+                    ui.label("NiceGUI Desktop Demo").style(
+                        "font-size: 20px; font-weight: bold; color: white"
                     )
 
-                def clear_text() -> None:
-                    """Clear text input and result."""
-                    text_input.value = ""
-                    result_label.text = "Result will appear here"
-                    result_label.style("color: #1976d2")
-                    self.log_action("Text Cleared", "Input field and result cleared")
+                    ui.space()
 
-                with ui.row().style("margin: 10px 0; gap: 10px"):
-                    ui.button("Process Text", on_click=on_text_change).style(
-                        "background-color: #4caf50"
+            # Main content area with proper layout
+            with ui.element("div").style(
+                "min-height: calc(100vh - 120px); padding: 20px"
+            ):
+                with ui.column().style("max-width: 700px; margin: 0 auto; gap: 20px"):
+
+                    # Text input section
+                    with ui.card().style("padding: 20px"):
+                        ui.label("📝 Text Processing Demo").style(
+                            "font-size: 18px; font-weight: bold; margin-bottom: 15px"
+                        )
+
+                        text_input = ui.input("Enter some text here...").style(
+                            "margin-bottom: 10px; width: 100%"
+                        )
+                        result_label = ui.label("Result will appear here").style(
+                            "font-weight: bold; color: #1976d2; margin-bottom: 10px; min-height: 24px"
+                        )
+
+                        def on_text_change() -> None:
+                            """Process text input and update result display."""
+                            input_text = text_input.value or ""
+                            if input_text:
+                                result_text = f"✓ You typed: '{input_text}' (Length: {len(input_text)} chars)"
+                                result_label.style("color: #4caf50")
+                            else:
+                                result_text = "⚠️ No text entered"
+                                result_label.style("color: #ff9800")
+
+                            result_label.text = result_text
+                            self.log_action(
+                                "Text Processing",
+                                f"Input: '{input_text}', Length: {len(input_text)}",
+                            )
+
+                        def clear_text() -> None:
+                            """Clear text input and result."""
+                            text_input.value = ""
+                            result_label.text = "Result will appear here"
+                            result_label.style("color: #1976d2")
+                            self.log_action(
+                                "Text Cleared", "Input field and result cleared"
+                            )
+
+                        with ui.row().style("gap: 10px"):
+                            ui.button("Process Text", on_click=on_text_change).style(
+                                "background-color: #4caf50"
+                            )
+                            ui.button("Clear", on_click=clear_text).style(
+                                "background-color: #ff9800"
+                            )
+
+                    # Counter demo
+                    with ui.card().style("padding: 20px"):
+                        ui.label("🔢 Counter Demo").style(
+                            "font-size: 18px; font-weight: bold; margin-bottom: 15px"
+                        )
+
+                        counter_value = 0
+                        counter_label = ui.label(f"Count: {counter_value}").style(
+                            "font-size: 16px; font-weight: bold; margin-bottom: 10px"
+                        )
+
+                        def increment() -> None:
+                            nonlocal counter_value
+                            counter_value += 1
+                            counter_label.text = f"Count: {counter_value}"
+                            self.log_action(
+                                "Counter Increment", f"New value: {counter_value}"
+                            )
+
+                        def decrement() -> None:
+                            nonlocal counter_value
+                            counter_value -= 1
+                            counter_label.text = f"Count: {counter_value}"
+                            self.log_action(
+                                "Counter Decrement", f"New value: {counter_value}"
+                            )
+
+                        def reset_counter() -> None:
+                            nonlocal counter_value
+                            old_value = counter_value
+                            counter_value = 0
+                            counter_label.text = f"Count: {counter_value}"
+                            self.log_action(
+                                "Counter Reset", f"Reset from {old_value} to 0"
+                            )
+
+                        with ui.row().style("gap: 10px"):
+                            ui.button("+ Increment", on_click=increment).style(
+                                "background-color: #4caf50"
+                            )
+                            ui.button("- Decrement", on_click=decrement).style(
+                                "background-color: #ff9800"
+                            )
+                            ui.button("Reset", on_click=reset_counter).style(
+                                "background-color: #9e9e9e"
+                            )
+
+                    # Network communications demo
+                    with ui.card().style("padding: 20px"):
+                        ui.label("🌐 Network Communications Demo").style(
+                            "font-size: 18px; font-weight: bold; margin-bottom: 15px"
+                        )
+
+                        ui.label(
+                            "Retrieve your public IP address from api.ipify.org"
+                        ).style("margin-bottom: 10px; color: #666")
+
+                        self.public_ip_label = ui.label(
+                            "Click button to fetch IP address"
+                        ).style(
+                            "font-weight: bold; color: #1976d2; margin-bottom: 10px; min-height: 24px"
+                        )
+
+                        def fetch_ip() -> None:
+                            """Trigger public IP fetch."""
+                            asyncio.create_task(self.get_public_ip())
+
+                        with ui.row().style("gap: 10px"):
+                            ui.button("🔍 Get Public IP", on_click=fetch_ip).style(
+                                "background-color: #2196f3"
+                            )
+
+                            def clear_ip() -> None:
+                                """Clear IP display."""
+                                if self.public_ip_label:
+                                    self.public_ip_label.text = (
+                                        "Click button to fetch IP address"
+                                    )
+                                    self.public_ip_label.style("color: #1976d2")
+                                    self.log_action("IP Cleared", "IP display cleared")
+
+                            ui.button("Clear", on_click=clear_ip).style(
+                                "background-color: #9e9e9e"
+                            )
+
+                    # App controls
+                    with ui.card().style("padding: 20px"):
+                        ui.label("🎛️ Application Controls").style(
+                            "font-size: 18px; font-weight: bold; margin-bottom: 15px"
+                        )
+
+                        def shutdown_app() -> None:
+                            """Shutdown the application gracefully."""
+                            self.log_action(
+                                "Application Shutdown", "User requested shutdown"
+                            )
+                            if self.clock_task and not self.clock_task.done():
+                                self.clock_task.cancel()
+                            app.shutdown()
+
+                        ui.button(
+                            "🔴 Shutdown Application", on_click=shutdown_app
+                        ).style("background-color: #d32f2f; color: white")
+
+            # Status bar at bottom
+            with ui.footer().style(
+                "background-color: #f5f5f5; padding: 10px; height: 40px; border-top: 1px solid #ddd"
+            ):
+                with ui.row().style(
+                    "width: 100%; align-items: center; justify-content: space-between"
+                ):
+                    ui.label("Ready").style("color: #666; font-size: 14px")
+
+                    # Clock in bottom right
+                    self.clock_label = ui.label("Loading...").style(
+                        "color: #666; font-size: 14px; font-family: monospace"
                     )
-                    ui.button("Clear", on_click=clear_text).style(
-                        "background-color: #ff9800"
-                    )
 
-                ui.separator().style("margin: 20px 0")
-
-                # Counter demo (UI actions affecting Python state)
-                ui.label("Counter Demo:").style("font-size: 18px; margin-bottom: 10px")
-
-                counter_value = 0
-                counter_label = ui.label(f"Count: {counter_value}").style(
-                    "font-size: 16px; font-weight: bold; margin-bottom: 10px"
-                )
-
-                def increment() -> None:
-                    nonlocal counter_value
-                    counter_value += 1
-                    counter_label.text = f"Count: {counter_value}"
-                    self.log_action("Counter Increment", f"New value: {counter_value}")
-
-                def decrement() -> None:
-                    nonlocal counter_value
-                    counter_value -= 1
-                    counter_label.text = f"Count: {counter_value}"
-                    self.log_action("Counter Decrement", f"New value: {counter_value}")
-
-                def reset_counter() -> None:
-                    nonlocal counter_value
-                    old_value = counter_value
-                    counter_value = 0
-                    counter_label.text = f"Count: {counter_value}"
-                    self.log_action("Counter Reset", f"Reset from {old_value} to 0")
-
-                with ui.row().style("gap: 10px; margin-bottom: 20px"):
-                    ui.button("+ Increment", on_click=increment).style(
-                        "background-color: #4caf50"
-                    )
-                    ui.button("- Decrement", on_click=decrement).style(
-                        "background-color: #ff9800"
-                    )
-                    ui.button("Reset", on_click=reset_counter).style(
-                        "background-color: #9e9e9e"
-                    )
-
-                ui.separator().style("margin: 20px 0")
-
-                # App controls
-                def shutdown_app() -> None:
-                    """Shutdown the application gracefully."""
-                    self.log_action("Application Shutdown", "User requested shutdown")
-                    if self.clock_task and not self.clock_task.done():
-                        self.clock_task.cancel()
-                    app.shutdown()
-
-                ui.button("🔴 Shutdown Application", on_click=shutdown_app).style(
-                    "background-color: #d32f2f; color: white; margin-top: 10px"
-                )
+            # Start the clock update task
+            if not self.clock_task or self.clock_task.done():
+                self.clock_task = asyncio.create_task(self.update_clock())
 
     def setup_shutdown_handler(self) -> None:
         """Setup application shutdown event handler."""
