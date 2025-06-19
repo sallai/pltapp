@@ -7,6 +7,7 @@ in a native window, ready for PyInstaller packaging.
 """
 
 import datetime
+import socket
 
 from nicegui import app, ui
 
@@ -18,6 +19,58 @@ class DesktopApp:
         """Initialize the desktop application."""
         self.setup_pages()
         self.setup_shutdown_handler()
+
+    def find_free_port(self, start_port: int = 8000, max_attempts: int = 100) -> int:
+        """Find a free port starting from the given port.
+
+        Args:
+            start_port: Port to start searching from
+            max_attempts: Maximum number of ports to try
+
+        Returns:
+            Available port number
+
+        Raises:
+            RuntimeError: If no free port is found within max_attempts
+        """
+        for port in range(start_port, start_port + max_attempts):
+            if self.is_port_free(port):
+                print(f"Found free port: {port}")
+                return port
+
+        raise RuntimeError(
+            f"No free port found in range {start_port}-{start_port + max_attempts}"
+        )
+
+    def is_port_free(self, port: int) -> bool:
+        """Check if a port is free.
+
+        Args:
+            port: Port number to check
+
+        Returns:
+            True if port is free, False otherwise
+        """
+        try:
+            with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
+                # Don't set SO_REUSEADDR to get accurate port availability
+                sock.settimeout(1)  # Quick timeout for testing
+                result = sock.connect_ex(("127.0.0.1", port))
+                if result == 0:
+                    # Port is in use (connection succeeded)
+                    return False
+                else:
+                    # Port appears free, try to bind to be sure
+                    try:
+                        with socket.socket(
+                            socket.AF_INET, socket.SOCK_STREAM
+                        ) as test_sock:
+                            test_sock.bind(("127.0.0.1", port))
+                            return True
+                    except OSError:
+                        return False
+        except Exception:
+            return False
 
     def setup_pages(self) -> None:
         """Setup application pages and UI components."""
@@ -63,7 +116,16 @@ class DesktopApp:
         """Run the desktop application."""
         print(f"Application starting: {datetime.datetime.now()}")
 
-        ui.run(native=True, reload=False, show=False, port=0)
+        # Find a free port (starting from 8000, avoiding common ports like 8001)
+        try:
+            free_port = self.find_free_port(start_port=8000)
+            print(f"Starting NiceGUI server on port {free_port}")
+            ui.run(native=True, reload=False, show=False, port=free_port)
+        except RuntimeError as e:
+            print(f"Error finding free port: {e}")
+            print("Falling back to automatic port selection (port=0)")
+            # Fallback to letting the system choose a port
+            ui.run(native=True, reload=False, show=False, port=0)
 
 
 def main() -> None:
