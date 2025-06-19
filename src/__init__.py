@@ -1,0 +1,1 @@
+"""NiceGUI Desktop Application Package."""

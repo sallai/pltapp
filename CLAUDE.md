@@ -6,6 +6,113 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 This project is a technology demonstration showing a NiceGUI UI application with a couple of UI controls in a pywebview, packaged into a native executable using PyInstaller. The project is kept as simple as possible, focusing on easy comprehensibility by humans, with proper inline documentation and markers indicating where additional functionality would be added should the developer want to turn this into a full-blown project.
 
+## Current Project Status
+
+**Status**: Foundation Complete - Ready for Core Implementation
+- ✅ Development environment and tooling configured
+- ✅ Project structure established with automation scripts
+- ✅ Dependencies defined and virtual environment ready
+- ❌ Main application implementation pending (main.py commented out)
+- ❌ NiceGUI + pywebview integration needed
+- ❌ PyInstaller packaging validation required
+
+## 3-Stage Development Plan
+
+### Stage 1: Core Application Implementation
+**Goal**: Get basic NiceGUI application running with UI components
+
+#### Tasks:
+1. **Activate Main Application** (`nicegui_desktop_app.py:1-54`)
+   - Uncomment and implement the basic NiceGUI UI
+   - Add text input, button, and result display components
+   - Implement text processing functionality
+   - Add shutdown capability
+
+2. **Test Development Mode**
+   - Run application in development: `python nicegui_desktop_app.py`
+   - Verify UI components work correctly
+   - Test input/output functionality
+   - Validate shutdown mechanism
+
+3. **Code Quality Validation**
+   - Run linting: `ruff check .`
+   - Run formatting: `black --check .`
+   - Run type checking: `mypy .`
+   - Fix any issues found
+
+#### Deliverables:
+- Working NiceGUI application in development mode
+- All code quality checks passing
+- Basic UI functionality verified
+
+### Stage 2: Native Integration & Packaging
+**Goal**: Integrate pywebview and create distributable executable
+
+#### Tasks:
+1. **NiceGUI Native Mode Setup**
+   - Research NiceGUI native vs pywebview approach
+   - Implement chosen native window solution
+   - Test native window functionality
+   - Ensure proper window management
+
+2. **PyInstaller Configuration**
+   - Update build script (`scripts/build_executable.py`)
+   - Configure .spec file for native dependencies
+   - Handle NiceGUI static assets bundling
+   - Test executable creation process
+
+3. **Build Validation**
+   - Create executable: `python scripts/build_executable.py`
+   - Test executable functionality
+   - Verify all dependencies included
+   - Test on clean system (if possible)
+
+#### Deliverables:
+- Standalone executable that runs without Python installation
+- Native window integration working
+- Build process documented and automated
+
+### Stage 3: Polish & Distribution
+**Goal**: Finalize packaging, testing, and documentation
+
+#### Tasks:
+1. **Cross-Platform Testing**
+   - Test on target platforms (macOS/Windows/Linux)
+   - Validate executable behavior consistency
+   - Handle platform-specific issues
+   - Optimize executable size if needed
+
+2. **Error Handling & Robustness**
+   - Add proper exception handling
+   - Implement graceful degradation
+   - Add logging for debugging
+   - Test edge cases and error scenarios
+
+3. **Documentation & Cleanup**
+   - Update IMPLEMENTATION_STATUS.md with final state
+   - Clean up build artifacts: `python scripts/cleanup_artifacts.py`
+   - Document any platform-specific requirements
+   - Create distribution notes
+
+#### Deliverables:
+- Production-ready executable
+- Complete documentation
+- Validated cross-platform compatibility
+- Clean, maintainable codebase
+
+## Implementation Notes
+
+### Key Decision Points:
+- **NiceGUI Native Mode**: Use `ui.run(native=True)` vs separate pywebview integration
+- **Asset Bundling**: Ensure NiceGUI static files included in PyInstaller build
+- **Window Management**: Proper shutdown and window lifecycle handling
+
+### Critical Success Factors:
+- Main application must work in both development and packaged modes
+- Executable must be truly standalone (no external dependencies)
+- UI must be responsive and professional
+- Build process must be repeatable and automated
+
 ## Tech Stack
 
 - **NiceGUI**: Web-based Python UI framework
@@ -17,14 +124,19 @@ This project is a technology demonstration showing a NiceGUI UI application with
 Basic commands for this project:
 
 ```bash
-# Install dependencies
-pip install -r requirements.txt
+# Automated development environment setup
+python scripts/setup_development_environment.py
+
+# Manual setup (alternative)
+python -m venv venv
+source venv/bin/activate  # On Windows: venv\Scripts\activate
+pip install -r requirements/dev.txt
 
 # Run the application in development
-python main.py
+python nicegui_desktop_app.py
 
 # Build executable with PyInstaller
-pyinstaller --onefile --windowed main.py
+python scripts/build_executable.py
 ```
 
 ## Architecture
@@ -102,16 +214,16 @@ The application follows a simple architecture pattern:
 - **Distribution**: Platform-specific executable generation
 
 ### Development Scripts
-- **Setup Script**: scripts/setup_dev.py - automated development environment setup
-- **Build Script**: scripts/build.py - PyInstaller executable creation
-- **Cleanup Script**: scripts/clean.py - removes build artifacts and cache files
+- **Setup Script**: scripts/setup_development_environment.py - automated development environment setup
+- **Build Script**: scripts/build_executable.py - PyInstaller executable creation
+- **Cleanup Script**: scripts/cleanup_artifacts.py - removes build artifacts and cache files
 - **All scripts**: Made executable and include proper error handling
 
 ### Extended Development Commands
 Quick setup and common development tasks:
 ```bash
 # Automated development environment setup
-python scripts/setup_dev.py
+python scripts/setup_development_environment.py
 
 # Manual setup (alternative)
 python -m venv venv
@@ -133,13 +245,13 @@ pytest tests/ --cov=. --cov-report=html
 pytest tests/ --cov=. --cov-report=term-missing
 
 # Build application
-python scripts/build.py
+python scripts/build_executable.py
 
 # Clean build artifacts and cache
-python scripts/clean.py
+python scripts/cleanup_artifacts.py
 
 # Run application (current simple structure)
-python main.py
+python nicegui_desktop_app.py
 ```
 
 ### Pre-commit Hooks
@@ -162,10 +274,20 @@ Pre-commit framework installed and ready for configuration:
 For the technology demonstration, the minimal structure is:
 ```
 ww/
-├── main.py              # Entry point and application setup
-├── requirements.txt     # Python dependencies
-├── CLAUDE.md           # This file - Claude Code guidance
-└── *.spec              # PyInstaller configuration (when generated)
+├── nicegui_desktop_app.py           # Entry point and application setup
+├── pyproject.toml                   # Project configuration and dependencies
+├── requirements/                    # Split dependency management
+│   ├── base.txt                    # Production dependencies
+│   ├── dev.txt                     # Development dependencies
+│   └── test.txt                    # Testing dependencies
+├── scripts/                         # Development automation
+│   ├── setup_development_environment.py  # Dev env setup
+│   ├── build_executable.py              # PyInstaller build
+│   └── cleanup_artifacts.py             # Cleanup script
+├── CLAUDE.md                       # This file - Claude Code guidance
+├── IMPLEMENTATION_PLAN.md          # Project roadmap
+├── IMPLEMENTATION_STATUS.md        # Current status tracking
+└── *.spec                          # PyInstaller configuration (when generated)
 ```
 
 ### Proposed Extended Structure
