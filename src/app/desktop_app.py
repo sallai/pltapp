@@ -147,17 +147,29 @@ class DesktopApp:
             ui.query(".nicegui-content").style("background-color: #ffffff")
 
     def show_config_dialog(self) -> None:
-        """Show configuration dialog."""
+        """Show configuration dialog as a centered modal."""
         self.log_action("Config Dialog", "Opened configuration dialog")
 
-        with ui.dialog() as dialog, ui.card():
-            ui.label("Configuration").style(
-                "font-size: 18px; font-weight: bold; margin-bottom: 15px"
-            )
+        with ui.dialog().props("persistent") as dialog:
+            with ui.card().style("min-width: 400px; padding: 20px"):
+                # Header
+                with ui.row().style(
+                    "width: 100%; align-items: center; margin-bottom: 20px"
+                ):
+                    ui.label("⚙️ Configuration").style(
+                        "font-size: 20px; font-weight: bold"
+                    )
+                    ui.space()
+                    ui.button(icon="close", on_click=dialog.close).props(
+                        "flat round"
+                    ).style("margin: -8px")
 
-            with ui.row().style("align-items: center; margin-bottom: 10px"):
-                ui.label("Theme:")
-                theme_switch = ui.switch("Dark Mode", value=self.dark_mode)
+                # Theme setting
+                with ui.row().style(
+                    "align-items: center; margin-bottom: 20px; gap: 10px"
+                ):
+                    ui.label("Theme:").style("min-width: 80px")
+                    theme_switch = ui.switch("Dark Mode", value=self.dark_mode)
 
                 def on_theme_change(event: Any) -> None:
                     new_value = (
@@ -171,17 +183,79 @@ class DesktopApp:
 
                 theme_switch.on("update:model-value", on_theme_change)
 
-            with ui.row().style("margin-top: 20px"):
-                ui.button("Close", on_click=dialog.close).style("margin-right: 10px")
+                ui.separator().style("margin: 20px 0")
 
-                def reset_settings() -> None:
-                    self.dark_mode = False
-                    theme_switch.value = False
-                    self.toggle_theme()
-                    self.log_action("Settings Reset", "Reset to default theme")
+                # Action buttons
+                with ui.row().style(
+                    "justify-content: flex-end; gap: 10px; width: 100%"
+                ):
 
-                ui.button("Reset to Default", on_click=reset_settings).style(
-                    "background-color: #ff9800"
+                    def reset_settings() -> None:
+                        self.dark_mode = False
+                        theme_switch.value = False
+                        self.toggle_theme()
+                        self.log_action("Settings Reset", "Reset to default theme")
+
+                    ui.button("Reset to Default", on_click=reset_settings).style(
+                        "background-color: #ff9800"
+                    )
+                    ui.button("Close", on_click=dialog.close).style(
+                        "background-color: #1976d2"
+                    )
+
+        dialog.open()
+
+    def show_about_dialog(self) -> None:
+        """Show about dialog as a centered modal."""
+        self.log_action("About Dialog", "Opened about dialog")
+
+        with ui.dialog().props("persistent") as dialog:
+            with ui.card().style("min-width: 400px; padding: 20px; text-align: center"):
+                # Header
+                with ui.row().style(
+                    "width: 100%; align-items: center; margin-bottom: 20px"
+                ):
+                    ui.label("ℹ️ About").style("font-size: 20px; font-weight: bold")
+                    ui.space()
+                    ui.button(icon="close", on_click=dialog.close).props(
+                        "flat round"
+                    ).style("margin: -8px")
+
+                # App info
+                ui.label("NiceGUI Desktop Demo").style(
+                    "font-size: 24px; font-weight: bold; margin-bottom: 10px"
+                )
+                ui.label("Version 1.0.0").style(
+                    "font-size: 16px; color: #666; margin-bottom: 20px"
+                )
+
+                ui.separator().style("margin: 20px 0")
+
+                # Technical details
+                with ui.column().style("gap: 8px; margin-bottom: 20px"):
+                    ui.label("🔧 Built with:").style(
+                        "font-weight: bold; margin-bottom: 5px"
+                    )
+                    ui.label("• NiceGUI - Modern Python UI framework")
+                    ui.label("• PyInstaller - Python to executable packaging")
+                    ui.label("• httpx - Async HTTP client")
+                    ui.label("• asyncio - Asynchronous programming")
+
+                ui.separator().style("margin: 20px 0")
+
+                # Features
+                with ui.column().style("gap: 8px; margin-bottom: 20px"):
+                    ui.label("✨ Features:").style(
+                        "font-weight: bold; margin-bottom: 5px"
+                    )
+                    ui.label("• Real-time clock updates")
+                    ui.label("• Network communications demo")
+                    ui.label("• Light/Dark theme switching")
+                    ui.label("• Professional desktop UI")
+
+                # Close button
+                ui.button("Close", on_click=dialog.close).style(
+                    "background-color: #1976d2; margin-top: 10px"
                 )
 
         dialog.open()
@@ -202,14 +276,10 @@ class DesktopApp:
                         "background-color: transparent; color: white"
                     ):
                         with ui.menu():
-                            with ui.menu_item(
+                            ui.menu_item(
                                 "⚙️ Configuration", on_click=self.show_config_dialog
-                            ):
-                                pass
-                            with ui.menu_item("ℹ️ About"):
-                                with ui.menu():
-                                    ui.menu_item("NiceGUI Desktop Demo v1.0")
-                                    ui.menu_item("Built with NiceGUI + PyInstaller")
+                            )
+                            ui.menu_item("ℹ️ About", on_click=self.show_about_dialog)
 
                     ui.space()
 
