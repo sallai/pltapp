@@ -4,8 +4,13 @@
 pytest>=8.0.0
 pytest-cov>=5.0.0
 pytest-mock>=3.14.0
+pytest-asyncio>=0.21.0
 pytest-xvfb>=3.0.0
 pytest-qt>=4.4.0
+
+# UI testing with selenium
+selenium>=4.15.0
+pytest-selenium>=4.1.0
 
 # Test utilities
 factory-boy>=3.3.1
