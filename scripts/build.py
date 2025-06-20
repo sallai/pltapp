@@ -17,7 +17,6 @@ def get_platform_specific_args() -> list:
     if platform.system() == "Darwin":  # macOS
         args.extend([
             "--osx-bundle-identifier", "com.nicegui.desktop.demo",
-            "--codesign-identity", "-",  # Ad-hoc signing
         ])
     elif platform.system() == "Windows":
         args.extend([
@@ -38,7 +37,6 @@ def build_executable() -> None:
     print(f"Project root: {project_root}")
     print(f"NiceGUI directory: {nicegui_dir}")
 
-    # Build command - using onedir for better compatibility
     cmd = [
         "python", "-m", "PyInstaller",
         "main.py",
@@ -84,9 +82,6 @@ def build_executable() -> None:
         "--exclude-module", "tkinter.tix",
         "--exclude-module", "turtle",
         "--exclude-module", "pdb",
-        "--exclude-module", "argparse",
-        "--exclude-module", "gettext",
-        "--exclude-module", "locale",
         
         # Performance optimizations
         "--strip",  # Strip debug symbols
