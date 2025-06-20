@@ -13,7 +13,7 @@ import nicegui
 def get_platform_specific_args() -> list:
     """Get platform-specific PyInstaller arguments."""
     args = []
-    
+
     if platform.system() == "Darwin":  # macOS
         args.extend([
             "--osx-bundle-identifier", "com.nicegui.desktop.demo",
@@ -22,7 +22,7 @@ def get_platform_specific_args() -> list:
         args.extend([
             "--icon", "resources/icon.ico",  # Windows icon
         ])
-    
+
     return args
 
 
@@ -32,7 +32,7 @@ def build_executable() -> None:
     # Get paths
     project_root = Path(__file__).parent.parent
     nicegui_dir = os.path.dirname(nicegui.__file__)
-    
+
     print(f"Building for platform: {platform.system()}")
     print(f"Project root: {project_root}")
     print(f"NiceGUI directory: {nicegui_dir}")
@@ -46,10 +46,10 @@ def build_executable() -> None:
         "--clean",  # Clean build artifacts
         "--noconfirm",  # Overwrite without confirmation
         "--optimize", "2",  # Optimize Python bytecode
-        
+
         # NiceGUI specific
         "--add-data", f"{nicegui_dir}{os.pathsep}nicegui",
-        
+
         # Hidden imports for common issues
         "--hidden-import", "uvicorn.logging",
         "--hidden-import", "uvicorn.loops",
@@ -61,10 +61,10 @@ def build_executable() -> None:
         "--hidden-import", "uvicorn.protocols.websockets.auto",
         "--hidden-import", "uvicorn.lifespan",
         "--hidden-import", "uvicorn.lifespan.on",
-        
+
         # Exclude development/test packages to reduce size
         "--exclude-module", "pytest",
-        "--exclude-module", "black", 
+        "--exclude-module", "black",
         "--exclude-module", "ruff",
         "--exclude-module", "mypy",
         "--exclude-module", "coverage",
@@ -82,13 +82,13 @@ def build_executable() -> None:
         "--exclude-module", "tkinter.tix",
         "--exclude-module", "turtle",
         "--exclude-module", "pdb",
-        
+
         # Performance optimizations
         "--strip",  # Strip debug symbols
         "--upx-exclude", "vcruntime140.dll",  # Exclude problematic files from UPX
         "--noupx",  # Disable UPX compression for now (can cause issues)
     ]
-    
+
     # Add platform-specific arguments
     cmd.extend(get_platform_specific_args())
 
@@ -98,14 +98,14 @@ def build_executable() -> None:
     try:
         result = subprocess.run(cmd, cwd=project_root, check=True, capture_output=True, text=True)
         print("Build completed successfully!")
-        
+
         # Check what was created
         dist_dir = project_root / "dist"
         if dist_dir.exists():
             print(f"\nFiles created in {dist_dir}:")
             for item in dist_dir.iterdir():
                 print(f"  - {item.name}")
-        
+
         if platform.system() == "Darwin":
             app_bundle = dist_dir / "NiceGUI-Desktop-App.app"
             if app_bundle.exists():
@@ -118,7 +118,7 @@ def build_executable() -> None:
             executable = dist_dir / "NiceGUI-Desktop-App"
             if executable.exists():
                 print(f"\n✅ Executable created: {executable}")
-                
+
     except subprocess.CalledProcessError as e:
         print(f"Build failed with exit code {e.returncode}")
         if e.stdout:

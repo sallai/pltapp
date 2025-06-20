@@ -1,23 +1,23 @@
 """Mock-based UI component tests using NiceGUI testing framework."""
 
-from unittest.mock import Mock, patch
+from unittest.mock import patch
 
 import pytest
 
-from src.app.app import App
 from src.app import root_page
+from src.app.app import App
 
 
 @pytest.mark.unit
 def test_modal_dialog_creation():
     """Test that modal dialog methods work with pre-created dialogs."""
     app = App()
-    
+
     # Dialogs start as None and are created when the page is accessed
     # In tests, we can test the behavior when dialogs don't exist yet
     assert root_page.config_dialog is None
     assert root_page.about_dialog is None
-    
+
     # Test that dialog methods can be called even when dialogs don't exist
     with patch('src.app.root_page.log_action') as mock_log:
         root_page.show_config_dialog()
@@ -28,10 +28,10 @@ def test_modal_dialog_creation():
 def test_about_dialog_creation():
     """Test that about dialog method works with pre-created dialogs."""
     app = App()
-    
+
     # Dialogs start as None and are created when the page is accessed
     assert root_page.about_dialog is None
-    
+
     # Test that dialog methods can be called even when dialogs don't exist
     with patch('src.app.root_page.log_action') as mock_log:
         root_page.show_about_dialog()
@@ -61,7 +61,7 @@ def test_dialog_methods_exist_and_callable():
     # Test that both dialog methods exist and can be called
     assert callable(root_page.show_config_dialog)
     assert callable(root_page.show_about_dialog)
-    
+
     # Test log actions are called for dialogs (when dialogs don't exist yet)
     with patch('src.app.root_page.log_action') as mock_log:
         root_page.show_config_dialog()

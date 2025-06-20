@@ -115,9 +115,9 @@ class App:
                     "Server Start", f"NiceGUI server starting on port {free_port}"
                 )
                 ui.run(
-                    native=True, 
-                    reload=False, 
-                    show=False, 
+                    native=True,
+                    reload=False,
+                    show=False,
                     port=free_port,
                     title="NiceGUI Desktop Demo",
                     window_size=(1000, 700),
@@ -129,9 +129,9 @@ class App:
                 self.log_action("Port Fallback", "Using automatic port selection")
                 # Fallback to letting the system choose a port
                 ui.run(
-                    native=True, 
-                    reload=False, 
-                    show=False, 
+                    native=True,
+                    reload=False,
+                    show=False,
                     port=0,
                     title="NiceGUI Desktop Demo",
                     window_size=(1000, 700),

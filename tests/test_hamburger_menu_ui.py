@@ -4,8 +4,8 @@ from unittest.mock import Mock, patch
 
 import pytest
 
-from src.app.app import App
 from src.app import root_page
+from src.app.app import App
 
 
 @pytest.mark.unit
@@ -15,7 +15,7 @@ def test_hamburger_menu_about_click_simulation():
 
     # Dialogs start as None and are created when the page is accessed
     assert root_page.about_dialog is None
-    
+
     # Test that dialog methods can be called even when dialogs don't exist
     with patch('src.app.root_page.log_action') as mock_log:
         # Call show_about_dialog directly (simulating menu item click)
@@ -32,7 +32,7 @@ def test_hamburger_menu_config_click_simulation():
 
     # Dialogs start as None and are created when the page is accessed
     assert root_page.config_dialog is None
-    
+
     # Test that dialog methods can be called even when dialogs don't exist
     with patch('src.app.root_page.log_action') as mock_log:
         # Simulate clicking the "⚙️ Configuration" menu item
@@ -52,7 +52,7 @@ def test_modal_dialog_content_after_click():
 
     # Dialogs start as None and are created when the page is accessed
     assert root_page.about_dialog is None
-    
+
     # Test that dialog methods can be called even when dialogs don't exist
     with patch('src.app.root_page.log_action') as mock_log:
         # Simulate the About menu click (directly call the method)
@@ -60,7 +60,7 @@ def test_modal_dialog_content_after_click():
 
         # Verify dialog method was called (logged)
         mock_log.assert_called_with("About Dialog", "Opened about dialog")
-    
+
     # Since dialogs are created during page access in a real app,
     # the content testing should be done in integration tests
 

@@ -4,8 +4,8 @@ from unittest.mock import Mock, patch
 
 import pytest
 
-from src.app.app import App
 from src.app import root_page
+from src.app.app import App
 
 
 @pytest.mark.unit

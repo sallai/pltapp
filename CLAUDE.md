@@ -22,14 +22,14 @@ This project is a technology demonstration showing a NiceGUI UI application with
 **Goal**: Get basic NiceGUI application running with UI components
 
 #### Tasks:
-1. **Activate Main Application** (`nicegui_desktop_app.py:1-54`)
+1. **Activate Main Application**
    - Uncomment and implement the basic NiceGUI UI
    - Add text input, button, and result display components
    - Implement text processing functionality
    - Add shutdown capability
 
 2. **Test Development Mode**
-   - Run application in development: `python nicegui_desktop_app.py`
+   - Run application in development: `python main.py`
    - Verify UI components work correctly
    - Test input/output functionality
    - Validate shutdown mechanism
@@ -125,7 +125,7 @@ Basic commands for this project:
 
 ```bash
 # Automated development environment setup
-python scripts/setup_development_environment.py
+python scripts/setup.py
 
 # Manual setup (alternative)
 python -m venv venv
@@ -133,10 +133,10 @@ source venv/bin/activate  # On Windows: venv\Scripts\activate
 pip install -r requirements/dev.txt
 
 # Run the application in development
-python nicegui_desktop_app.py
+python main.py
 
 # Build executable with PyInstaller
-python scripts/build_executable.py
+python scripts/build.py
 ```
 
 ## Architecture
@@ -223,7 +223,7 @@ The application follows a simple architecture pattern:
 Quick setup and common development tasks:
 ```bash
 # Automated development environment setup
-python scripts/setup_development_environment.py
+python scripts/setup.py
 
 # Manual setup (alternative)
 python -m venv venv
@@ -245,13 +245,13 @@ pytest tests/ --cov=. --cov-report=html
 pytest tests/ --cov=. --cov-report=term-missing
 
 # Build application
-python scripts/build_executable.py
+python scripts/build.py
 
 # Clean build artifacts and cache
-python scripts/cleanup_artifacts.py
+python scripts/clean.py
 
 # Run application (current simple structure)
-python nicegui_desktop_app.py
+python main.py
 ```
 
 ### Pre-commit Hooks
