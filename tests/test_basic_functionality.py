@@ -4,23 +4,27 @@ from unittest.mock import Mock, patch
 
 import pytest
 
-from src.app.desktop_app import DesktopApp
+from src.app.app import App
+from src.app import root_page
 
 
-def test_desktop_app_initialization():
-    """Test that DesktopApp initializes correctly."""
-    app = DesktopApp()
+@pytest.mark.unit
+def test_app_initialization():
+    """Test that App initializes correctly."""
+    app = App()
 
-    # Check initial state
-    assert app.dark_mode is False
-    assert app.clock_label is None
-    assert app.clock_task is None
-    assert app.public_ip_label is None
+    # Check that app instance exists
+    assert app is not None
+
+    # Check initial state of root_page variables
+    assert root_page.dark_mode is False
+    assert root_page.public_ip_label is None
 
 
+@pytest.mark.unit
 def test_port_checking():
     """Test port availability checking functionality."""
-    app = DesktopApp()
+    app = App()
 
     # Test that is_port_free works for obviously free/used ports
     # Note: We can't test specific ports reliably in CI, but we can test the method exists
@@ -34,9 +38,10 @@ def test_port_checking():
         assert port == 8000
 
 
+@pytest.mark.unit
 def test_port_finding_failure():
     """Test that find_free_port raises error when no ports available."""
-    app = DesktopApp()
+    app = App()
 
     # Mock all ports as unavailable
     with patch.object(app, 'is_port_free', return_value=False):
@@ -44,9 +49,10 @@ def test_port_finding_failure():
             app.find_free_port(start_port=8000, max_attempts=3)
 
 
+@pytest.mark.unit
 def test_log_action():
     """Test that log_action prints correctly formatted messages."""
-    app = DesktopApp()
+    app = App()
 
     # Mock print to capture output
     with patch('builtins.print') as mock_print:
@@ -62,89 +68,106 @@ def test_log_action():
         assert "[" in call_args  # Should have timestamp
 
 
+@pytest.mark.unit
 def test_theme_toggle():
     """Test theme toggle functionality."""
-    app = DesktopApp()
+    app = App()
 
     # Initial state should be light mode
-    assert app.dark_mode is False
+    assert root_page.dark_mode is False
 
     # Mock the UI query to avoid actual DOM manipulation
-    with patch('src.app.desktop_app.ui.query') as mock_query:
+    with patch('src.app.root_page.ui.query') as mock_query:
         mock_element = Mock()
         mock_query.return_value = mock_element
 
         # Toggle to dark mode
-        app.toggle_theme()
-        assert app.dark_mode is True
+        root_page.toggle_theme()
+        assert root_page.dark_mode is True
 
         # Verify UI updates were called
         assert mock_query.called
 
         # Toggle back to light mode
-        app.toggle_theme()
-        assert app.dark_mode is False
+        root_page.toggle_theme()
+        assert root_page.dark_mode is False
 
 
-@pytest.mark.asyncio
-async def test_get_public_ip_success():
+@pytest.mark.unit
+def test_get_public_ip_success():
     """Test successful public IP retrieval."""
-    app = DesktopApp()
+    app = App()
 
     # Mock the public IP label
     mock_label = Mock()
-    app.public_ip_label = mock_label
+    root_page.public_ip_label = mock_label
 
-    # Mock httpx client
-    with patch('src.app.desktop_app.httpx.AsyncClient') as mock_client:
+    # Mock requests
+    with patch('src.app.root_page.requests.get') as mock_get:
         mock_response = Mock()
         mock_response.text = "192.168.1.1"
         mock_response.raise_for_status.return_value = None
+        mock_get.return_value = mock_response
 
-        mock_client.return_value.__aenter__.return_value.get.return_value = mock_response
-
-        await app.get_public_ip()
+        root_page.get_public_ip()
 
         # Verify the label was updated with success
         assert "Public IP: 192.168.1.1" in mock_label.text
         mock_label.style.assert_called_with("color: #4caf50")
 
 
-@pytest.mark.asyncio
-async def test_get_public_ip_timeout():
+@pytest.mark.unit
+def test_get_public_ip_timeout():
     """Test public IP retrieval timeout handling."""
-    app = DesktopApp()
+    app = App()
 
     # Mock the public IP label
     mock_label = Mock()
-    app.public_ip_label = mock_label
+    root_page.public_ip_label = mock_label
 
-    # Mock httpx client to raise timeout
-    with patch('src.app.desktop_app.httpx.AsyncClient') as mock_client:
-        mock_client.return_value.__aenter__.return_value.get.side_effect = Exception("timeout")
+    # Mock requests to raise timeout
+    with patch('src.app.root_page.requests.get') as mock_get:
+        mock_get.side_effect = Exception("timeout")
 
-        await app.get_public_ip()
+        root_page.get_public_ip()
 
-        # Verify error handling
-        assert "Error:" in mock_label.text
+        # Verify error handling (updated for new error message format)
+        assert "error" in mock_label.text.lower()
         mock_label.style.assert_called_with("color: #d32f2f")
 
 
+@pytest.mark.unit
 def test_setup_shutdown_handler():
     """Test that shutdown handler is properly configured."""
-    with patch('src.app.desktop_app.app') as mock_app:
-        DesktopApp()
+    with patch('src.app.app.app') as mock_app:
+        App()
 
         # Verify that on_shutdown was called
         mock_app.on_shutdown.assert_called_once()
 
 
+@pytest.mark.unit
 def test_modal_dialog_methods_exist():
     """Test that modal dialog methods exist and are callable."""
-    app = DesktopApp()
+    app = App()
 
-    # Check that dialog methods exist
-    assert hasattr(app, 'show_config_dialog')
-    assert hasattr(app, 'show_about_dialog')
-    assert callable(app.show_config_dialog)
-    assert callable(app.show_about_dialog)
+    # Check that dialog methods exist in root_page module
+    assert hasattr(root_page, 'show_config_dialog')
+    assert hasattr(root_page, 'show_about_dialog')
+    assert callable(root_page.show_config_dialog)
+    assert callable(root_page.show_about_dialog)
+
+
+@pytest.mark.unit
+def test_quit_application_method():
+    """Test that quit application method exists and is callable."""
+    app = App()
+
+    # Check that quit method exists in root_page module
+    assert hasattr(root_page, 'quit_application')
+    assert callable(root_page.quit_application)
+
+    # Test that quit method calls app.shutdown
+    with patch('src.app.root_page.app') as mock_app:
+        root_page.quit_application()
+        mock_app.shutdown.assert_called_once()

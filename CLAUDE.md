@@ -408,3 +408,6 @@ NEVER create files unless they're absolutely necessary for achieving your goal.
 ALWAYS prefer editing an existing file to creating a new one.
 NEVER proactively create documentation files (*.md) or README files. Only create documentation files if explicitly requested by the User.
 ALWAYS prefer simple solutions.
+IF a NiceGUI UI container (like a ui.dialog, ui.card, or ui.row) needs to appear and disappear, THEN you must instantiate it during the initial page load.
+NEVER write container creation like "with ui.dialog()" or "my_card = ui.card()" inside an on_click handler.
+When working with NiceGUI ALWAYS use event handlers to call methods like .open(), .close(), or .set_visibility() on component references that were created outside the handler.

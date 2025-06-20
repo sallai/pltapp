@@ -1,5 +1,5 @@
 """Main application module."""
 
-from .desktop_app import DesktopApp
+from .app import App
 
-__all__ = ["DesktopApp"]
+__all__ = ["App"]

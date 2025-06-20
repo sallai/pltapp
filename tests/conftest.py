@@ -3,19 +3,26 @@
 import pytest
 from nicegui import ui
 
-from src.app.desktop_app import DesktopApp
+from src.app.app import App
+from src.app import root_page
 
 
 @pytest.fixture(scope="function")
 def app():
     """Create a test application instance."""
-    # Clear any existing UI state
-    ui.clear()
+    # Reset root_page module variables to initial state
+    root_page.dark_mode = False
+    root_page.public_ip_label = None
+    root_page.about_dialog = None
+    root_page.config_dialog = None
 
     # Create and setup the app
-    test_app = DesktopApp()
+    test_app = App()
 
     yield test_app
 
-    # Cleanup after test
-    ui.clear()
+    # Reset root_page module variables after test
+    root_page.dark_mode = False
+    root_page.public_ip_label = None
+    root_page.about_dialog = None
+    root_page.config_dialog = None

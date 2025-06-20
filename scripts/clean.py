@@ -7,7 +7,7 @@ import shutil
 
 def clean_build_artifacts() -> None:
     """Remove build artifacts."""
-    artifacts = ["build", "dist", "*.egg-info"]
+    artifacts = ["build", "dist", "*.egg-info", "*.spec"]
     for pattern in artifacts:
         if "*" in pattern:
             # Handle glob patterns
@@ -32,7 +32,7 @@ def clean_build_artifacts() -> None:
 
 def clean_cache_files() -> None:
     """Remove Python cache files."""
-    cache_patterns = ["__pycache__", "*.pyc", "*.pyo", ".pytest_cache", ".coverage"]
+    cache_patterns = ["__pycache__", "*.pyc", "*.pyo", ".pytest_cache", ".coverage", "htmlcov"]
 
     for root, dirs, files in os.walk("."):
         # Remove cache directories

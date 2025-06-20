@@ -1,5 +1,5 @@
 # Core dependencies for NiceGUI desktop application
 nicegui>=2.0.0
-httpx>=0.25.0
+requests>=2.28.0
 fastapi
 uvicorn

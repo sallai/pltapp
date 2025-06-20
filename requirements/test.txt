@@ -11,6 +11,7 @@ pytest-qt>=4.4.0
 # UI testing with selenium
 selenium>=4.15.0
 pytest-selenium>=4.1.0
+webdriver-manager>=4.0.0
 
 # Test utilities
 factory-boy>=3.3.1
