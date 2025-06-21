@@ -30,15 +30,12 @@ config_dialog: ui.dialog | None = None
 # Sensor application state
 is_generating = False
 packets_per_second = 75
-update_rate = 1.0  # Update rate in seconds
 data_buffer = PlotDataBuffer(max_size=300)
 timer: Optional[ui.timer] = None
 freq_bw_plot_element: Optional[ui.plotly] = None
 scanner_plot_element: Optional[ui.plotly] = None
 status_label: Optional[ui.label] = None
-data_rate_label: Optional[ui.label] = None
 packets_slider: Optional[ui.slider] = None
-update_rate_slider: Optional[ui.slider] = None
 
 # Selection state storage for both plots
 freq_bw_selection_state = None
@@ -170,7 +167,7 @@ def setup_root_page(app: "App") -> None:
 
 def _setup_control_panel() -> None:
     """Setup the sensor control panel."""
-    global status_label, data_rate_label, packets_slider, update_rate_slider
+    global status_label, packets_slider
     
     with ui.card().classes("q-pa-md").style("width: 100%"):
         ui.label("📡 Sensor Control Panel").classes("text-h6 text-weight-bold q-mb-md")
@@ -188,12 +185,8 @@ def _setup_control_panel() -> None:
                 ui.button("⏹️ Stop", on_click=stop_generation).props("color=negative")
                 ui.button("🗑️ Clear", on_click=clear_plots).props("color=grey")
         
-        # Data rate status display
-        with ui.row().style("width: 100%; align-items: center; gap: 20px; margin-bottom: 15px"):
-            data_rate_label = ui.label("Data Rate: 0.0 KB/update (0.0 KB/sec)").classes("text-body2")
-        
         # Packets per second control
-        with ui.row().style("width: 100%; align-items: center; gap: 20px; margin-bottom: 15px"):
+        with ui.row().style("width: 100%; align-items: center; gap: 20px"):
             ui.label("Packets/Second:").style("min-width: 120px")
             packets_slider = ui.slider(
                 min=10, max=5000, step=5, value=packets_per_second
@@ -204,33 +197,9 @@ def _setup_control_panel() -> None:
                 global packets_per_second
                 packets_per_second = int(value)
                 packets_value_label.text = str(packets_per_second)
-                update_data_rate_display()
                 log_action("Packets Changed", f"New rate: {packets_per_second} packets/sec")
             
             packets_slider.on('update:model-value', lambda e: on_packets_change(e.args))
-        
-        # Update rate control
-        with ui.row().style("width: 100%; align-items: center; gap: 20px"):
-            ui.label("Update Rate (sec):").style("min-width: 120px")
-            update_rate_slider = ui.slider(
-                min=0.1, max=5.0, step=0.1, value=update_rate
-            ).style("flex-grow: 1")
-            update_rate_value_label = ui.label(f"{update_rate:.1f}")
-            
-            def on_update_rate_change(value: float) -> None:
-                global update_rate
-                update_rate = round(float(value), 1)
-                update_rate_value_label.text = f"{update_rate:.1f}"
-                update_data_rate_display()
-                # Update timer if running
-                if is_generating and timer:
-                    timer.interval = update_rate
-                log_action("Update Rate Changed", f"New rate: {update_rate:.1f} seconds")
-            
-            update_rate_slider.on('update:model-value', lambda e: on_update_rate_change(e.args))
-        
-        # Initialize the data rate display
-        update_data_rate_display()
 
 
 def _setup_plots_section() -> None:
@@ -264,158 +233,6 @@ def _setup_plots_section() -> None:
     log_action("Plot Elements", f"freq_bw_plot_element: {freq_bw_plot_element is not None}, scanner_plot_element: {scanner_plot_element is not None}")
 
 
-def calculate_data_size(num_packets: int) -> float:
-    """Calculate estimated data size in kilobytes for a given number of packets.
-    
-    Each sensor data point contains:
-    - timestamp (8 bytes float)
-    - frequency (8 bytes float) 
-    - bandwidth (8 bytes float)
-    - power (8 bytes float)
-    Total: 32 bytes per packet
-    """
-    bytes_per_packet = 32  # 4 floats * 8 bytes each
-    total_bytes = num_packets * bytes_per_packet
-    return total_bytes / 1024.0  # Convert to kilobytes
-
-
-def update_data_rate_display() -> None:
-    """Update the data rate display with current settings."""
-    global data_rate_label, packets_per_second, update_rate
-    
-    if data_rate_label:
-        # Calculate data per update
-        data_per_update_kb = calculate_data_size(packets_per_second)
-        
-        # Calculate data rate per second
-        data_rate_kb_per_sec = data_per_update_kb / update_rate
-        
-        # Update the display
-        data_rate_label.text = f"Data Rate: {data_per_update_kb:.2f} KB/update ({data_rate_kb_per_sec:.2f} KB/sec)"
-
-
-def efficient_update_plot_data(plot_element, trace_index: int, x_data, y_data, colors=None, sizes=None, selected_points=None) -> None:
-    """
-    Efficient plot update using direct data manipulation to minimize network traffic.
-    
-    This approach is more efficient than plot_element.update() which sends the entire figure.
-    Instead, we only update the specific data arrays that have changed.
-    
-    Args:
-        plot_element: NiceGUI plotly element
-        trace_index: Index of the trace to update (usually 0)
-        x_data: New X axis data
-        y_data: New Y axis data  
-        colors: Optional color data for markers
-        sizes: Optional size data for markers
-        selected_points: Optional selected point indices
-    """
-    if not plot_element or not hasattr(plot_element, 'figure'):
-        return
-    
-    try:
-        # Direct manipulation of figure data (more efficient than full update)
-        trace = plot_element.figure.data[trace_index]
-        
-        # Update core data arrays
-        trace.x = x_data
-        trace.y = y_data
-        
-        # Update marker properties if provided
-        if colors is not None:
-            trace.marker.color = colors
-            
-        if sizes is not None:
-            trace.marker.size = sizes
-            
-        if selected_points is not None:
-            trace.selectedpoints = selected_points
-        else:
-            # Clear selection if no points specified
-            trace.selectedpoints = None
-        
-        # Use update() to send only the changed data to frontend
-        plot_element.update()
-        
-    except Exception as e:
-        log_action("Plot Update Error", f"Error in efficient update: {e}")
-
-
-def efficient_clear_plot_data(plot_element, trace_index: int = 0) -> None:
-    """
-    Efficiently clear plot data by setting arrays to empty.
-    
-    Args:
-        plot_element: NiceGUI plotly element
-        trace_index: Index of the trace to clear (usually 0)
-    """
-    if not plot_element or not hasattr(plot_element, 'figure'):
-        return
-    
-    try:
-        trace = plot_element.figure.data[trace_index]
-        
-        # Clear all data arrays
-        trace.x = []
-        trace.y = []
-        trace.marker.color = []
-        
-        # Clear marker size if it exists
-        if hasattr(trace.marker, 'size'):
-            trace.marker.size = []
-            
-        # Clear selections
-        trace.selectedpoints = None
-        
-        # Send the update
-        plot_element.update()
-        
-    except Exception as e:
-        log_action("Plot Clear Error", f"Error in efficient clear: {e}")
-
-
-def efficient_update_plot_selection(plot_element, selection_state, selected_points=None) -> None:
-    """
-    Efficiently update plot selection without affecting data.
-    
-    Args:
-        plot_element: NiceGUI plotly element
-        selection_state: Selection rectangle coordinates dict or None
-        selected_points: List of selected point indices or None
-    """
-    if not plot_element or not hasattr(plot_element, 'figure'):
-        return
-    
-    try:
-        # Update selection shapes
-        if selection_state:
-            selection_shape = {
-                'type': 'rect',
-                'x0': selection_state['x0'],
-                'x1': selection_state['x1'],
-                'y0': selection_state['y0'],
-                'y1': selection_state['y1'],
-                'line': {'color': 'blue', 'width': 2, 'dash': 'dash'},
-                'fillcolor': 'rgba(0, 0, 255, 0.1)',
-                'layer': 'above'
-            }
-            plot_element.figure.update_layout(shapes=[selection_shape])
-        else:
-            plot_element.figure.update_layout(shapes=[])
-        
-        # Update selected points
-        if selected_points and len(plot_element.figure.data) > 0:
-            plot_element.figure.data[0].selectedpoints = selected_points
-        elif len(plot_element.figure.data) > 0:
-            plot_element.figure.data[0].selectedpoints = None
-        
-        # Send the update
-        plot_element.update()
-        
-    except Exception as e:
-        log_action("Selection Update Error", f"Error in efficient selection update: {e}")
-
-
 def start_generation() -> None:
     """Start sensor data generation."""
     global is_generating, timer, status_label
@@ -428,14 +245,11 @@ def start_generation() -> None:
         status_label.text = "Status: Running"
         status_label.classes("text-positive")
     
-    # Start timer with configurable update rate
-    timer = ui.timer(update_rate, update_sensor_data)
+    # Start timer for 1Hz updates
+    timer = ui.timer(1.0, update_sensor_data)
     timer.active = True
     
-    # Update data rate display
-    update_data_rate_display()
-    
-    log_action("Generation Started", f"Started at {packets_per_second} packets/sec, {update_rate:.1f}s updates")
+    log_action("Generation Started", f"Started at {packets_per_second} packets/sec")
 
 
 def stop_generation() -> None:
@@ -472,20 +286,27 @@ def clear_plots() -> None:
     scanner_selection_state = None
     scanner_selected_points = None
     
-    # Clear plots using efficient clear method
+    # Clear plots using direct data assignment
     if freq_bw_plot_element:
-        efficient_clear_plot_data(freq_bw_plot_element, trace_index=0)
-        # Also clear selection shapes
-        efficient_update_plot_selection(freq_bw_plot_element, None)
-        log_action("Plot Cleared", "Frequency vs Bandwidth plot efficiently cleared")
+        freq_bw_plot_element.figure.data[0].x = []
+        freq_bw_plot_element.figure.data[0].y = []
+        freq_bw_plot_element.figure.data[0].marker.color = []
+        freq_bw_plot_element.figure.data[0].selectedpoints = None
+        freq_bw_plot_element.figure.update_layout(shapes=[])
+        freq_bw_plot_element.update()
+        log_action("Plot Cleared", "Frequency vs Bandwidth plot data cleared directly")
     else:
         log_action("Plot Error", "freq_bw_plot_element is None during clear")
     
     if scanner_plot_element:
-        efficient_clear_plot_data(scanner_plot_element, trace_index=0)
-        # Also clear selection shapes
-        efficient_update_plot_selection(scanner_plot_element, None)
-        log_action("Plot Cleared", "Scanner plot efficiently cleared")
+        scanner_plot_element.figure.data[0].x = []
+        scanner_plot_element.figure.data[0].y = []
+        scanner_plot_element.figure.data[0].marker.color = []
+        scanner_plot_element.figure.data[0].marker.size = []
+        scanner_plot_element.figure.data[0].selectedpoints = None
+        scanner_plot_element.figure.update_layout(shapes=[])
+        scanner_plot_element.update()
+        log_action("Plot Cleared", "Scanner plot data cleared directly")
     else:
         log_action("Plot Error", "scanner_plot_element is None during clear")
     
@@ -513,37 +334,58 @@ def update_sensor_data() -> None:
         current_data = data_buffer.get_data()
         log_action("Data Buffered", f"Buffer contains {len(current_data)} data points")
         
-        # Update plots using efficient data updates to minimize network traffic
+        # Update plots with new data using direct data assignment and preserve selections
         if freq_bw_plot_element and current_data:
             # Extract data for frequency vs bandwidth plot
             frequencies = [freq for _, freq, _, _ in current_data]
             bandwidths = [bw for _, _, bw, _ in current_data]
             powers = [pwr for _, _, _, pwr in current_data]
             
-            # Determine selected points if there's a selection state
-            selected_points = None
-            if freq_bw_selection_state and freq_bw_selected_points:
-                selected_points = [i for i in freq_bw_selected_points if i < len(frequencies)]
+            # Update plot data directly
+            freq_bw_plot_element.figure.data[0].x = frequencies
+            freq_bw_plot_element.figure.data[0].y = bandwidths
+            freq_bw_plot_element.figure.data[0].marker.color = powers
             
-            # Use efficient update method that only sends changed data
-            efficient_update_plot_data(
-                freq_bw_plot_element, 
-                trace_index=0,
-                x_data=frequencies,
-                y_data=bandwidths,
-                colors=powers,
-                selected_points=selected_points
-            )
-            
-            # Update selection visualization separately if needed
+            # Restore selection if it exists
             if freq_bw_selection_state:
-                efficient_update_plot_selection(freq_bw_plot_element, freq_bw_selection_state, selected_points)
+                # Create selection shape
+                selection_shape = {
+                    'type': 'rect',
+                    'x0': freq_bw_selection_state['x0'],
+                    'x1': freq_bw_selection_state['x1'],
+                    'y0': freq_bw_selection_state['y0'],
+                    'y1': freq_bw_selection_state['y1'],
+                    'line': {'color': 'blue', 'width': 2, 'dash': 'dash'},
+                    'fillcolor': 'rgba(0, 0, 255, 0.1)',
+                    'layer': 'above'
+                }
+                
+                # Update layout with selection
+                freq_bw_plot_element.figure.update_layout(shapes=[selection_shape])
+                
+                # Mark selected points
+                if freq_bw_selected_points:
+                    selected_indices = [i for i in freq_bw_selected_points 
+                                      if i < len(frequencies)]
+                    if selected_indices:
+                        freq_bw_plot_element.figure.data[0].selectedpoints = selected_indices
+            else:
+                # Clear any existing shapes if no selection
+                freq_bw_plot_element.figure.update_layout(shapes=[])
+                freq_bw_plot_element.figure.data[0].selectedpoints = None
             
-            log_action("Plot Updated", f"Frequency vs Bandwidth plot efficiently updated with {len(current_data)} points")
+            freq_bw_plot_element.update()
+            
+            log_action("Plot Updated", f"Frequency vs Bandwidth plot data updated directly with {len(current_data)} points")
         elif freq_bw_plot_element and not current_data:
-            # Use efficient clear method
-            efficient_clear_plot_data(freq_bw_plot_element, trace_index=0)
-            log_action("Plot Cleared", "Frequency vs Bandwidth plot efficiently cleared")
+            # Clear plot data
+            freq_bw_plot_element.figure.data[0].x = []
+            freq_bw_plot_element.figure.data[0].y = []
+            freq_bw_plot_element.figure.data[0].marker.color = []
+            freq_bw_plot_element.figure.data[0].selectedpoints = None
+            freq_bw_plot_element.figure.update_layout(shapes=[])
+            freq_bw_plot_element.update()
+            log_action("Plot Cleared", "Frequency vs Bandwidth plot data cleared")
         else:
             log_action("Plot Error", "freq_bw_plot_element is None")
         
@@ -552,33 +394,54 @@ def update_sensor_data() -> None:
             frequencies = [freq for _, freq, _, _ in current_data]
             powers = [pwr for _, _, _, pwr in current_data]
             bandwidths = [bw for _, _, bw, _ in current_data]
-            sizes = [max(4, min(15, bw/4)) for bw in bandwidths]
             
-            # Determine selected points if there's a selection state
-            selected_points = None
-            if scanner_selection_state and scanner_selected_points:
-                selected_points = [i for i in scanner_selected_points if i < len(frequencies)]
+            # Update plot data directly
+            scanner_plot_element.figure.data[0].x = frequencies
+            scanner_plot_element.figure.data[0].y = powers
+            scanner_plot_element.figure.data[0].marker.color = bandwidths
+            scanner_plot_element.figure.data[0].marker.size = [max(4, min(15, bw/4)) for bw in bandwidths]
             
-            # Use efficient update method that only sends changed data
-            efficient_update_plot_data(
-                scanner_plot_element,
-                trace_index=0,
-                x_data=frequencies,
-                y_data=powers,
-                colors=bandwidths,
-                sizes=sizes,
-                selected_points=selected_points
-            )
-            
-            # Update selection visualization separately if needed
+            # Restore selection if it exists
             if scanner_selection_state:
-                efficient_update_plot_selection(scanner_plot_element, scanner_selection_state, selected_points)
+                # Create selection shape
+                selection_shape = {
+                    'type': 'rect',
+                    'x0': scanner_selection_state['x0'],
+                    'x1': scanner_selection_state['x1'],
+                    'y0': scanner_selection_state['y0'],
+                    'y1': scanner_selection_state['y1'],
+                    'line': {'color': 'blue', 'width': 2, 'dash': 'dash'},
+                    'fillcolor': 'rgba(0, 0, 255, 0.1)',
+                    'layer': 'above'
+                }
+                
+                # Update layout with selection
+                scanner_plot_element.figure.update_layout(shapes=[selection_shape])
+                
+                # Mark selected points
+                if scanner_selected_points:
+                    selected_indices = [i for i in scanner_selected_points 
+                                      if i < len(frequencies)]
+                    if selected_indices:
+                        scanner_plot_element.figure.data[0].selectedpoints = selected_indices
+            else:
+                # Clear any existing shapes if no selection
+                scanner_plot_element.figure.update_layout(shapes=[])
+                scanner_plot_element.figure.data[0].selectedpoints = None
             
-            log_action("Plot Updated", f"Scanner plot efficiently updated with {len(current_data)} points")
+            scanner_plot_element.update()
+            
+            log_action("Plot Updated", f"Scanner plot data updated directly with {len(current_data)} points")
         elif scanner_plot_element and not current_data:
-            # Use efficient clear method
-            efficient_clear_plot_data(scanner_plot_element, trace_index=0)
-            log_action("Plot Cleared", "Scanner plot efficiently cleared")
+            # Clear plot data
+            scanner_plot_element.figure.data[0].x = []
+            scanner_plot_element.figure.data[0].y = []
+            scanner_plot_element.figure.data[0].marker.color = []
+            scanner_plot_element.figure.data[0].marker.size = []
+            scanner_plot_element.figure.data[0].selectedpoints = None
+            scanner_plot_element.figure.update_layout(shapes=[])
+            scanner_plot_element.update()
+            log_action("Plot Cleared", "Scanner plot data cleared")
         else:
             log_action("Plot Error", "scanner_plot_element is None")
             
