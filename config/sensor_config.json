@@ -1,0 +1,49 @@
+{
+  "sensor_parameters": {
+    "packets_per_second": {
+      "default": 75,
+      "min": 10,
+      "max": 500,
+      "description": "Number of packets to generate per second"
+    },
+    "frequency_band": {
+      "min_mhz": 2400.0,
+      "max_mhz": 2500.0,
+      "description": "2.4GHz ISM band frequency range"
+    },
+    "power_range": {
+      "min_dbm": -100.0,
+      "max_dbm": -30.0,
+      "description": "Received power range in dBm"
+    },
+    "bandwidth_range": {
+      "min_mhz": 1.0,
+      "max_mhz": 80.0,
+      "description": "Signal bandwidth range in MHz"
+    }
+  },
+  "protocol_weights": {
+    "wifi_probability": 0.6,
+    "bluetooth_probability": 0.3,
+    "other_probability": 0.1,
+    "description": "Probability distribution for different protocol types"
+  },
+  "wifi_channels": {
+    "channels_mhz": [2412, 2417, 2422, 2427, 2432, 2437, 2442, 2447, 2452, 2457, 2462, 2467, 2472],
+    "channel_width_mhz": [5, 10, 20, 40, 80],
+    "description": "WiFi channel center frequencies and available widths"
+  },
+  "bluetooth_config": {
+    "base_frequency_mhz": 2402.0,
+    "hop_channels": 79,
+    "channel_spacing_mhz": 1.0,
+    "description": "Bluetooth frequency hopping parameters"
+  },
+  "signal_characteristics": {
+    "power_variation_db": 3.0,
+    "strong_signal_probability": 0.05,
+    "weak_signal_probability": 0.1,
+    "timing_jitter_ms": 100.0,
+    "description": "Signal variation and timing parameters"
+  }
+}

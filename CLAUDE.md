@@ -4,101 +4,17 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-This project is a technology demonstration showing a NiceGUI UI application with a couple of UI controls in a native window, packaged into a native executable using PyInstaller. The project is kept as simple as possible, focusing on easy comprehensibility by humans, with proper inline documentation and markers indicating where additional functionality would be added should the developer want to turn this into a full-blown project.
+This project is a technology demonstration showing a NiceGUI UI application that plots live sensory data, packaged into a native executable using PyInstaller. The project is kept as simple as possible, focusing on easy comprehensibility by humans, with proper inline documentation and markers indicating where additional functionality would be added should the developer want to turn this into a full-blown project.
 
 ## Current Project Status
 
 **Status**: Foundation Complete - Ready for Core Implementation
-- ✅ Development environment and tooling configured
-- ✅ Project structure established with automation scripts
-- ✅ Dependencies defined and virtual environment ready
-- ❌ Main application implementation pending (main.py commented out)
-- ❌ NiceGUI native mode integration needed
-- ❌ PyInstaller packaging validation required
-
-## 3-Stage Development Plan
-
-### Stage 1: Core Application Implementation
-**Goal**: Get basic NiceGUI application running with UI components
-
-#### Tasks:
-1. **Activate Main Application**
-   - Uncomment and implement the basic NiceGUI UI
-   - Add text input, button, and result display components
-   - Implement text processing functionality
-   - Add shutdown capability
-
-2. **Test Development Mode**
-   - Run application in development: `python main.py`
-   - Verify UI components work correctly
-   - Test input/output functionality
-   - Validate shutdown mechanism
-
-3. **Code Quality Validation**
-   - Run linting: `ruff check .`
-   - Run formatting: `black --check .`
-   - Run type checking: `mypy .`
-   - Fix any issues found
-
-#### Deliverables:
-- Working NiceGUI application in development mode
-- All code quality checks passing
-- Basic UI functionality verified
-
-### Stage 2: Native Integration & Packaging
-**Goal**: Integrate native window mode and create distributable executable
-
-#### Tasks:
-1. **NiceGUI Native Mode Setup**
-   - Research NiceGUI native mode implementation
-   - Implement chosen native window solution
-   - Test native window functionality
-   - Ensure proper window management
-
-2. **PyInstaller Configuration**
-   - Update build script (`scripts/build_executable.py`)
-   - Configure .spec file for native dependencies
-   - Handle NiceGUI static assets bundling
-   - Test executable creation process
-
-3. **Build Validation**
-   - Create executable: `python scripts/build_executable.py`
-   - Test executable functionality
-   - Verify all dependencies included
-   - Test on clean system (if possible)
-
-#### Deliverables:
-- Standalone executable that runs without Python installation
-- Native window integration working
-- Build process documented and automated
-
-### Stage 3: Polish & Distribution
-**Goal**: Finalize packaging, testing, and documentation
-
-#### Tasks:
-1. **Cross-Platform Testing**
-   - Test on target platforms (macOS/Windows/Linux)
-   - Validate executable behavior consistency
-   - Handle platform-specific issues
-   - Optimize executable size if needed
-
-2. **Error Handling & Robustness**
-   - Add proper exception handling
-   - Implement graceful degradation
-   - Add logging for debugging
-   - Test edge cases and error scenarios
-
-3. **Documentation & Cleanup**
-   - Update IMPLEMENTATION_STATUS.md with final state
-   - Clean up build artifacts: `python scripts/cleanup_artifacts.py`
-   - Document any platform-specific requirements
-   - Create distribution notes
-
-#### Deliverables:
-- Production-ready executable
-- Complete documentation
-- Validated cross-platform compatibility
-- Clean, maintainable codebase
+- Development environment and tooling configured
+- Project structure established with automation scripts
+- Dependencies defined and virtual environment ready
+- Main application implementation pending (main.py commented out)
+- NiceGUI native mode integration needed
+- PyInstaller packaging validation required
 
 ## Implementation Notes
 
@@ -290,87 +206,6 @@ ww/
 └── *.spec                          # PyInstaller configuration (when generated)
 ```
 
-### Proposed Extended Structure
-If expanding into a full project, the recommended structure would be:
-
-```
-ww/
-├── src/                    # Source code directory
-│   ├── __init__.py
-│   ├── main.py            # Application entry point
-│   ├── ui/                # UI components and layouts
-│   │   ├── __init__.py
-│   │   ├── components/    # Reusable UI components
-│   │   │   ├── __init__.py
-│   │   │   ├── buttons.py
-│   │   │   ├── forms.py
-│   │   │   └── dialogs.py
-│   │   ├── pages/         # Main application pages/views
-│   │   │   ├── __init__.py
-│   │   │   ├── main_page.py
-│   │   │   └── settings_page.py
-│   │   └── styles/        # CSS and styling
-│   │       ├── main.css
-│   │       └── themes.css
-│   ├── core/              # Core application logic
-│   │   ├── __init__.py
-│   │   ├── app.py         # Main application class
-│   │   ├── config.py      # Configuration management
-│   │   └── events.py      # Event handling
-│   ├── services/          # Business logic and services
-│   │   ├── __init__.py
-│   │   ├── data_service.py
-│   │   └── file_service.py
-│   └── utils/             # Utility functions
-│       ├── __init__.py
-│       ├── helpers.py
-│       └── validators.py
-├── tests/                  # Test suite
-│   ├── __init__.py
-│   ├── test_main.py
-│   ├── test_ui/
-│   │   ├── __init__.py
-│   │   └── test_components.py
-│   ├── test_core/
-│   │   ├── __init__.py
-│   │   └── test_app.py
-│   └── fixtures/          # Test data and fixtures
-│       └── sample_data.json
-├── assets/                 # Static assets
-│   ├── icons/
-│   │   ├── app.ico
-│   │   └── app.png
-│   ├── images/
-│   └── fonts/
-├── scripts/                # Build and utility scripts
-│   ├── build.py           # PyInstaller build script
-│   ├── setup_dev.py       # Development environment setup
-│   └── clean.py           # Cleanup script
-├── requirements/           # Dependency management
-│   ├── base.txt           # Base dependencies
-│   ├── dev.txt            # Development dependencies
-│   └── test.txt           # Testing dependencies
-├── config/                 # Configuration files
-│   ├── settings.json      # Application settings
-│   ├── logging.conf       # Logging configuration
-│   └── build.yaml         # Build configuration
-├── docs/                   # Documentation (only if needed)
-│   ├── api.md
-│   └── deployment.md
-├── .github/                # GitHub workflows (if using GitHub)
-│   └── workflows/
-│       ├── ci.yml
-│       └── build.yml
-├── dist/                   # Built executables (generated)
-├── build/                  # Build artifacts (generated)
-├── .gitignore             # Git ignore patterns
-├── .pre-commit-config.yaml # Pre-commit hooks configuration
-├── pyproject.toml         # Project metadata and tool configuration
-├── requirements.txt       # Main dependencies (symlink to requirements/base.txt)
-├── CLAUDE.md              # This file - Claude Code guidance
-└── README.md              # Project documentation (only if requested)
-```
-
 ### Directory Guidelines
 
 - **src/**: All source code lives here for better organization
@@ -403,6 +238,7 @@ Contains the detailed implementation plan broken down into phases with actionabl
 - Configuration decisions and settings
 
 ## important-instruction-reminders
+When executing tasks from IMPLEMENTATION_PLAN.md, ALWAYS update this file after completing tasks.
 Do what has been asked; nothing more, nothing less.
 NEVER create files unless they're absolutely necessary for achieving your goal.
 ALWAYS prefer editing an existing file to creating a new one.

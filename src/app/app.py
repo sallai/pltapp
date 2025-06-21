@@ -17,8 +17,13 @@ from .root_page import setup_root_page
 class App:
     """Main application class."""
 
-    def __init__(self) -> None:
-        """Initialize the desktop application."""
+    def __init__(self, browser_mode: bool = False) -> None:
+        """Initialize the desktop application.
+        
+        Args:
+            browser_mode: If True, run in browser mode; if False, run in native desktop window
+        """
+        self.browser_mode = browser_mode
         self.setup_pages()
         self.setup_shutdown_handler()
 
@@ -102,41 +107,58 @@ class App:
             print(f"Application shutdown: {datetime.datetime.now()}")
 
     def run(self) -> None:
-        """Run the desktop application with comprehensive error handling."""
+        """Run the application with comprehensive error handling."""
         try:
-            print(f"Application starting: {datetime.datetime.now()}")
-            self.log_action("Application Startup", "NiceGUI desktop app initialized")
+            mode_text = "browser" if self.browser_mode else "native desktop"
+            print(f"Application starting in {mode_text} mode: {datetime.datetime.now()}")
+            self.log_action("Application Startup", f"NiceGUI app initialized in {mode_text} mode")
 
-            # Find a free port (starting from 8000, avoiding common ports like 8001)
-            try:
-                free_port = self.find_free_port(start_port=8000)
-                print(f"Starting NiceGUI server on port {free_port}")
-                self.log_action(
-                    "Server Start", f"NiceGUI server starting on port {free_port}"
-                )
-                ui.run(
-                    native=True,
-                    reload=False,
-                    show=False,
-                    port=free_port,
-                    title="NiceGUI Desktop Demo",
-                    window_size=(1000, 700),
-                    fullscreen=False
-                )
-            except RuntimeError as e:
-                print(f"Error finding free port: {e}")
-                print("Falling back to automatic port selection (port=0)")
-                self.log_action("Port Fallback", "Using automatic port selection")
-                # Fallback to letting the system choose a port
-                ui.run(
-                    native=True,
-                    reload=False,
-                    show=False,
-                    port=0,
-                    title="NiceGUI Desktop Demo",
-                    window_size=(1000, 700),
-                    fullscreen=False
-                )
+            # Configure UI parameters based on mode
+            if self.browser_mode:
+                # Browser mode: open in default browser
+                ui_params = {
+                    "native": False,
+                    "reload": False,
+                    "show": True,  # Automatically open browser
+                    "title": "2.4GHz Sensor Visualization",
+                    "port": 8080,  # Standard port for browser mode
+                }
+                print("Starting in browser mode on http://localhost:8080")
+                self.log_action("Server Start", "NiceGUI server starting in browser mode on port 8080")
+            else:
+                # Native desktop mode: find free port and create native window
+                try:
+                    free_port = self.find_free_port(start_port=8000)
+                    print(f"Starting NiceGUI server on port {free_port}")
+                    self.log_action(
+                        "Server Start", f"NiceGUI server starting on port {free_port}"
+                    )
+                    ui_params = {
+                        "native": True,
+                        "reload": False,
+                        "show": False,
+                        "port": free_port,
+                        "title": "2.4GHz Sensor Visualization",
+                        "window_size": (1400, 900),
+                        "fullscreen": False
+                    }
+                except RuntimeError as e:
+                    print(f"Error finding free port: {e}")
+                    print("Falling back to automatic port selection (port=0)")
+                    self.log_action("Port Fallback", "Using automatic port selection")
+                    # Fallback to letting the system choose a port
+                    ui_params = {
+                        "native": True,
+                        "reload": False,
+                        "show": False,
+                        "port": 0,
+                        "title": "2.4GHz Sensor Visualization",
+                        "window_size": (1400, 900),
+                        "fullscreen": False
+                    }
+            
+            # Run the application with determined parameters
+            ui.run(**ui_params)
         except KeyboardInterrupt:
             print("\nReceived interrupt signal. Shutting down gracefully...")
             self.log_action("Application Shutdown", "Interrupted by user")
